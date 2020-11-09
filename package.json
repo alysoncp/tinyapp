@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/alysoncp/tinyapp/issues"
   },
-  "homepage": "https://github.com/alysoncp/tinyapp#readme"
+  "homepage": "https://github.com/alysoncp/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
