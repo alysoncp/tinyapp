@@ -23,11 +23,11 @@ const users = {
 }
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-  "4j3SJg": "http://www.formula1.com",
-  "n3Y67y": "https://www.cbc.ca/news",
-  "oo8dE3": "https://www.youtube.com/",
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "abc"},
+  "9sm5xK": { longURL: "http://www.google.com", userID: "xyz"},
+  "4j3SJg": { longURL: "http://www.formula1.com", userID: "user1"},
+  "b6UTxQ": { longURL: "https://www.tsn.ca", userID: "xyz" },
+  "i3BoGr": { longURL: "https://www.google.ca", userID: "abc" },
 
 
 };
@@ -175,7 +175,9 @@ app.post("/urls/:shortURL/update", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]
+  console.log(req.params.shortURL)
+  const longURL = urlDatabase[req.params.shortURL].longURL
+  console.log(longURL)
   res.redirect(longURL);
 });
 

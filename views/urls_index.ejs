@@ -23,12 +23,15 @@
       </thead>
       <tbody>
         <% for(let url in urls) { %>
-          <tr>
-            <td><a href="/urls/<%= url %>"><%= url %></a></td>
-            <td><%= urls[url] %></td>
-            <td><a href="/urls/<%= url %>/update"><button class="btn btn-info" >Update</button></a></td>
-            <td><form method="POST" action="/urls/<%= url %>/delete"><input type="submit" class="btn btn-danger" value="Delete"></form></td>
-          </tr>
+          <% console.log(urls[url].userID) %>
+          <% if (user && urls[url].userID === user.id) { %>
+            <tr>
+              <td><a href="/urls/<%= url %>"><%= url %></a></td>
+              <td><%= urls[url]["longURL"] %></td>
+              <td><a href="/urls/<%= url %>/update"><button class="btn btn-info" >Update</button></a></td>
+              <td><form method="POST" action="/urls/<%= url %>/delete"><input type="submit" class="btn btn-danger" value="Delete"></form></td>
+            </tr>
+          <% } %>  
         <% } %>
       </tbody>
     </table>
