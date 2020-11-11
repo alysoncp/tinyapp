@@ -40,15 +40,12 @@ function generateRandomString() {
 
 function emailCheck(newEmail){
   for (user in users){
-    console.log(users[user].email);
     if (users[user].email === newEmail){
-      return true;
+      return users[user]
     }
   }
-  return false;
+  return undefined;
 }
-
-//console.log(emailCheck("abc@example.com"));
 
 app.set("view engine", "ejs");
 
@@ -56,10 +53,32 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(cookieParser())
 
+
+// -------------- GETS and POSTS ---------------------------
+
+app.get("/urls/login", (req, res) => {
+  const currentUser = req.cookies["id"]
+  console.log(`current user: ${currentUser}`)
+  const templateVars = { user: users[currentUser], urls: urlDatabase };
+  console.log("Rendering login page");
+  res.render("urls_login", templateVars)
+});
+
+
 app.post("/urls/login", (req, res) => {
   console.log("Logged in!");
-  console.log(req.body.id);
-  res.cookie('id', req.body.id);
+  console.log(req.body.email);
+  user = emailCheck(req.body.email)
+  if (user && user.password === req.body.password){
+    console.log("matching email and password");
+    res.cookie('id', user.id)
+  } else if (user){
+    res.status(403);
+    res.send(`Error Code ${res.statusCode}: Wrong password`)
+  } else {
+    res.status(403);
+    res.send(`Error Code ${res.statusCode}: That email doesn't exist!`)
+  }
   console.log(req.cookies);
   res.redirect(`/urls/`);
 });
@@ -76,20 +95,18 @@ app.get("/urls", (req, res) => {
   console.log(currentUser);
   console.log(users[currentUser]);
   const templateVars = { user: users[currentUser], urls: urlDatabase };
-  console.log(templateVars)
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { id: req.cookies["id"]};
+  const currentUser = req.cookies["id"]
+  const templateVars = { user: users[currentUser]};
   res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
   const generatedURL = generateRandomString();
   urlDatabase[generatedURL] = req.body["longURL"];
-  console.log(urlDatabase)
   res.redirect(`/urls/${generatedURL}`);  
 });
 

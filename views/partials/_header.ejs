@@ -11,14 +11,11 @@
       </div>
     </div>
     <% if (user === undefined) { %>
-    <form class="form-inline" action="/urls/login" method="POST">
-      <label for="username">Sign In (UserID):</label>
-      <input class="form-control" type="text" name="id" placeholder="Hilary Swank" style="width: 350px; margin: 1em">
-      <button type="submit" class="btn btn-primary">Sign In</button>
-    </form>
+      <a class="nav-item nav-link" href="/urls/login"><button class="btn btn-primary">Login</button></a>
+      <a class="nav-item nav-link" href="/urls/register"><button class="btn btn-dark">Register</button></a>
     <% } else { %>
-    <div class="collapse navbar-collapse text-white"><h4>Welcome! <%= user.email %> </h4></div>
-    <form class="form-inline" method="POST" action="/urls/logout"><input type="submit" class="btn btn-warning" value="Sign Out"></form>
+      <div class="collapse navbar-collapse text-white"><h4>Welcome! <%= user.email %> </h4></div>
+      <form class="form-inline" method="POST" action="/urls/logout"><input type="submit" class="btn btn-warning" value="Sign Out"></form>
     <% } %>
   </nav>
 </header>
