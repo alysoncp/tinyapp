@@ -11,30 +11,31 @@
 <body>
   <header><%- include('partials/_header') %></header>
   <main style="margin: 1em;">
-    <h3>My URLs</h3>
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Short URL</th>
-          <th scope="col">Long URL</th>
-          <th scope="col">Update</th>
-          <th scope="col">Delete</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% for(let url in urls) { %>
-          <% console.log(urls[url].userID) %>
-          <% if (user && urls[url].userID === user.id) { %>
-            <tr>
-              <td><a href="/urls/<%= url %>"><%= url %></a></td>
-              <td><%= urls[url]["longURL"] %></td>
-              <td><a href="/urls/<%= url %>/update"><button class="btn btn-info" >Update</button></a></td>
-              <td><form method="POST" action="/urls/<%= url %>/delete"><input type="submit" class="btn btn-danger" value="Delete"></form></td>
-            </tr>
-          <% } %>  
-        <% } %>
-      </tbody>
-    </table>
+    <% if(user) { %>
+      <h3>My URLs</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Short URL</th>
+            <th scope="col">Long URL</th>
+            <th scope="col">Update</th>
+            <th scope="col">Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for(let url in urls) { %>
+              <tr>
+                <td><a href="/urls/<%= url %>"><%= url %></a></td>
+                <td><%= urls[url]["longURL"] %></td>
+                <td><a href="/urls/<%= url %>/update"><button class="btn btn-info" >Update</button></a></td>
+                <td><form method="POST" action="/urls/<%= url %>/delete"><input type="submit" class="btn btn-danger" value="Delete"></form></td>
+              </tr>
+          <% } %>
+        </tbody>
+      </table>
+    <% } else { %>
+          <h3>Login to See your URLs!</h3>
+    <% }  %>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

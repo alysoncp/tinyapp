@@ -1,8 +1,24 @@
+// -------------------- REQUIRES ----------------------
+
 const express = require("express");
-const app = express();
-const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
+
+
+// ----------------- APP SETUP ---------------------------
+
+const app = express();
+
+const PORT = 8080; 
+
+app.set("view engine", "ejs");
+
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.use(cookieParser())
+
+
+// --------------------- DATA ------------------------------
 
 const users = { 
   "user1": {
@@ -33,6 +49,9 @@ const urlDatabase = {
 };
 
 
+// ------------ FUNCTIONS ------------------
+
+
 function generateRandomString() {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -52,14 +71,21 @@ function emailCheck(newEmail){
   return undefined;
 }
 
-app.set("view engine", "ejs");
-
-app.use(bodyParser.urlencoded({extended: true}));
-
-app.use(cookieParser())
+function urlsForUser(id) {
+  usersURLs = {};
+  for (url in urlDatabase) {
+    if (urlDatabase[url].userID === id){
+      usersURLs[url] = { longURL: urlDatabase[url].longURL, userID: id}
+    }  
+  }
+  return usersURLs
+}
 
 
 // -------------- GETS and POSTS ---------------------------
+
+
+// ------ Login/Logout ------
 
 app.get("/urls/login", (req, res) => {
   const currentUser = req.cookies["id"]
@@ -94,12 +120,13 @@ app.post("/urls/logout", (req, res) => {
   res.redirect(`/urls/`);
 });
 
+
+// ------ Homepage ------
+
 app.get("/urls", (req, res) => {
-  // console.log(res.status);
   const currentUser = req.cookies["id"]
-  console.log(currentUser);
-  console.log(users[currentUser]);
-  const templateVars = { user: users[currentUser], urls: urlDatabase };
+  const usersURLs = urlsForUser(currentUser)
+  const templateVars = { user: users[currentUser], urls: usersURLs };
   res.render("urls_index", templateVars);
 });
 
@@ -108,6 +135,9 @@ app.post("/urls", (req, res) => {
   urlDatabase[generatedURL] = req.body["longURL"];
   res.redirect(`/urls/`);  
 });
+
+
+// ------ Create New URL ------
 
 app.get("/urls/new", (req, res) => {
   console.log("newURL")
@@ -122,6 +152,8 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+
+// ------ Register New User ------
 
 app.get("/urls/register", (req, res) => {
   const currentUser = req.cookies["id"]
@@ -152,17 +184,35 @@ app.post("/urls/register", (req, res) => {
 
 });
 
+
+
+// ------ Handle Specific Short URLs ------
+
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log("Deleted");
-  console.log(req.params)
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls/`);
+  const currentUser = req.cookies["id"]
+  console.log(currentUser)
+  if (urlDatabase[req.params.shortURL].userID === currentUser){
+    console.log("Deleted");
+    console.log(req.params)
+    delete urlDatabase[req.params.shortURL];
+    res.redirect(`/urls/`);
+  } else {
+    res.status(401);
+    res.send(`Error Code ${res.statusCode}: You do not have authorization to delete this URL`)
+  }  
 });
 
 app.get("/urls/:shortURL/update", (req, res) => {
   const currentUser = req.cookies["id"]
-  const templateVars = { user: users.currentUser, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  res.render("urls_show", templateVars);
+  console.log(currentUser);
+  console.log(urlDatabase[req.params.shortURL].userID);
+  if (urlDatabase[req.params.shortURL].userID === currentUser){
+    const templateVars = { user: users.currentUser, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(401);
+    res.send(`Error Code ${res.statusCode}: You do not have authorization to edit this URL`)
+  }  
 });
 
 app.post("/urls/:shortURL/update", (req, res) => {
@@ -181,6 +231,8 @@ app.get("/urls/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+
+// --------------- LISTEN ------------------
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
