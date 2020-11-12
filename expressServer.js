@@ -206,10 +206,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const currentUser = req.cookies["id"]
-  console.log(req.params.shortURL);
+  console.log(users[currentUser]);
   console.log(urlDatabase[req.params.shortURL].longURL);
   if (urlDatabase[req.params.shortURL].userID === currentUser){
-    const templateVars = { user: users.currentUser, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
+    const templateVars = { user: users[currentUser], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
     res.render("urls_show", templateVars);
   } else {
     res.status(401);
