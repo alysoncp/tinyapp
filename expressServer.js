@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use (cookieSession({
   name: "session",
-  keys: ["id", "ball"]
+  keys: ["id"]
 }))
 
 // --------------------- DATA ------------------------------
@@ -63,14 +63,7 @@ function generateRandomString() {
   return result;
 }
 
-function emailCheck(newEmail){
-  for (user in users){
-    if (users[user].email === newEmail){
-      return users[user]
-    }
-  }
-  return undefined;
-}
+const { emailCheck } = require("./functions");
 
 function urlsForUser(id) {
   usersURLs = {};
@@ -90,7 +83,6 @@ function urlsForUser(id) {
 
 app.get("/urls/login", (req, res) => {
   const currentUser = req.session.id
-  //const currentUser = req.cookies["id"]
   console.log(`current user: ${currentUser}`)
   const templateVars = { user: users[currentUser], urls: urlDatabase };
   console.log("Rendering login page");
@@ -99,18 +91,15 @@ app.get("/urls/login", (req, res) => {
 
 
 app.post("/urls/login", (req, res) => {
-  console.log("Logged in!");
+  console.log("Logging in...");
   console.log(req.body.email);
-  user = emailCheck(req.body.email)
+  user = emailCheck(req.body.email, users)
   console.log(user.id)
   passMatch = bcrypt.compareSync(req.body.password, user.password);
   if (user && passMatch) {
     console.log("matching email and password");
     req.session.id = user.id;
-    req.session.ball = "ball"
     console.log(req.session.id)
-    console.log(req.session.ball)
-    //res.cookie('id', user.id)
   } else if (user) {
     res.status(403);
     res.send(`Error Code ${res.statusCode}: Wrong password`)
@@ -118,14 +107,13 @@ app.post("/urls/login", (req, res) => {
     res.status(403);
     res.send(`Error Code ${res.statusCode}: That email doesn't exist!`)
   }
-  //console.log(req.cookies);
+  console.log("Logged in!")
   res.redirect(`/urls/`);
 });
 
 app.post("/urls/logout", (req, res) => {
   console.log("Logged out!");
   req.session = null;
-  //res.clearCookie('id');
   res.redirect(`/urls/`);
 });
 
@@ -134,7 +122,6 @@ app.post("/urls/logout", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const currentUser = req.session.id
-  //const currentUser = req.cookies["id"]
   const usersURLs = urlsForUser(currentUser)
   const templateVars = { user: users[currentUser], urls: usersURLs };
   res.render("urls_index", templateVars);
@@ -155,7 +142,6 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   console.log("newURL")
   const currentUser = req.session.id
-  //const currentUser = req.cookies["id"]
   console.log(currentUser)
   if (currentUser) {
     const templateVars = { user: users[currentUser]};
@@ -171,7 +157,6 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/register", (req, res) => {
   const currentUser = req.session.id
-  //const currentUser = req.cookies["id"]
   const templateVars = { user: users.currentUser, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_register", templateVars);
 });
@@ -182,7 +167,7 @@ app.post("/urls/register", (req, res) => {
   if (req.body["email"] === '' || req.body["password"] === '') {
     res.status(400);
     res.send(`Error Code ${res.statusCode}: Fields can't be blank!`)
-  } else if (emailCheck(req.body["email"])) {  
+  } else if (emailCheck(req.body["email"], users)) {  
     res.status(400);
     res.send(`Error Code ${res.statusCode}: That email already exists!`)
   } else  {
@@ -193,7 +178,6 @@ app.post("/urls/register", (req, res) => {
       password: bcrypt.hashSync(password, 10),
     };
     req.session.id = newID;
-    //res.cookie('id', newID);
     console.log(users[newID].password)
     console.log("registered");
     res.redirect(`/urls/`);
@@ -207,7 +191,6 @@ app.post("/urls/register", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const currentUser = req.session.id
-  //const currentUser = req.cookies["id"]
   console.log(currentUser);
   console.log(urlDatabase[req.params.shortURL].userID);
   if (urlDatabase[req.params.shortURL].userID === currentUser){
@@ -224,7 +207,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const currentUser = req.session.id
-  //const currentUser = req.cookies["id"]
   console.log(users[currentUser]);
   console.log(urlDatabase[req.params.shortURL].longURL);
   if (urlDatabase[req.params.shortURL].userID === currentUser){
