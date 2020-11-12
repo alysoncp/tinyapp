@@ -130,12 +130,13 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const generatedURL = generateRandomString();
-  urlDatabase[generatedURL] = req.body["longURL"];
+  urlDatabase[generatedURL] = { longURL: req.body["longURL"], userID: req.cookies["id"]}
+  console.log(urlDatabase)
   res.redirect(`/urls/`);  
 });
 
 
-// ------ Create New URL ------
+// ------ Create New URL page------
 
 app.get("/urls/new", (req, res) => {
   console.log("newURL")
@@ -221,7 +222,8 @@ app.post("/urls/:shortURL", (req, res) => {
   console.log(req.body)
   const shtURL = req.params.shortURL
   console.log(shtURL)
-  urlDatabase[shtURL] = req.body.longURL;
+  console.log(urlDatabase[shtURL])
+  urlDatabase[shtURL].longURL = req.body.longURL;
   res.redirect(`/urls/`)
 });
 
