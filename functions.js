@@ -1,10 +1,10 @@
-const emailCheck = function(newEmail, users){
-  for (user in users){
-    if (users[user].email === newEmail){
-      return users[user]
+const emailCheck = function(newEmail, users) {
+  for (let user in users) {
+    if (users[user].email === newEmail) {
+      return users[user];
     }
   }
   return undefined;
-}
+};
 
-module.exports = {emailCheck}
+module.exports = {emailCheck};
