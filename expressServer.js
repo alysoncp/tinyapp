@@ -3,20 +3,16 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
-
+const bcrypt = require('bcrypt');
 
 // ----------------- APP SETUP ---------------------------
 
 const app = express();
-
 const PORT = 8080; 
 
 app.set("view engine", "ejs");
-
 app.use(bodyParser.urlencoded({extended: true}));
-
-app.use(cookieParser())
-
+app.use(cookieParser());
 
 // --------------------- DATA ------------------------------
 
@@ -24,17 +20,17 @@ const users = {
   "user1": {
     id: "user1", 
     email: "user1@example.com", 
-    password: "1234"
+    password: bcrypt.hashSync("1234", 10),
   },
  "xyz": {
     id: "xyz", 
     email: "xyz@example.com", 
-    password: "1234"
+    password: bcrypt.hashSync("1234", 10),
   },
   "abc": {
     id: "abc", 
     email: "abc@example.com", 
-    password: "1234"
+    password: bcrypt.hashSync("1234", 10),
   }
 }
 
@@ -100,10 +96,12 @@ app.post("/urls/login", (req, res) => {
   console.log("Logged in!");
   console.log(req.body.email);
   user = emailCheck(req.body.email)
-  if (user && user.password === req.body.password){
+  console.log(user)
+  passMatch = bcrypt.compareSync(req.body.password, user.password);
+  if (user && passMatch) {
     console.log("matching email and password");
     res.cookie('id', user.id)
-  } else if (user){
+  } else if (user) {
     res.status(403);
     res.send(`Error Code ${res.statusCode}: Wrong password`)
   } else {
@@ -171,13 +169,14 @@ app.post("/urls/register", (req, res) => {
     res.status(400);
     res.send(`Error Code ${res.statusCode}: That email already exists!`)
   } else  {
+    let password = req.body["password"]
     users[newID] = {
       id : newID,
       email: req.body["email"], 
-      password: req.body["password"],
+      password: bcrypt.hashSync(password, 10),
     };
     res.cookie('id', newID);
-    console.log(users)
+    console.log(users[newID].password)
     console.log("registered");
     res.redirect(`/urls/`);
   }
