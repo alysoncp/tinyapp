@@ -45,13 +45,10 @@ const urlDatabase = {
   "4j3SJg": { longURL: "http://www.formula1.com", userID: "user1"},
   "b6UTxQ": { longURL: "https://www.tsn.ca", userID: "xyz" },
   "i3BoGr": { longURL: "https://www.google.ca", userID: "abc" },
-
-
 };
 
 
 // ------------ FUNCTIONS ------------------
-
 
 function generateRandomString() {
   let result = '';
@@ -78,28 +75,22 @@ function urlsForUser(id) {
 
 // -------------- GETS and POSTS ---------------------------
 
-
 // ------ Login/Logout ------
 
 app.get("/urls/login", (req, res) => {
   const currentUser = req.session.id
-  console.log(`current user: ${currentUser}`)
+  //console.log(`current user: ${currentUser}`)
   const templateVars = { user: users[currentUser], urls: urlDatabase };
-  console.log("Rendering login page");
+  //console.log("Rendering login page");
   res.render("urls_login", templateVars)
 });
 
-
 app.post("/urls/login", (req, res) => {
   console.log("Logging in...");
-  console.log(req.body.email);
   user = emailCheck(req.body.email, users)
-  console.log(user.id)
   passMatch = bcrypt.compareSync(req.body.password, user.password);
   if (user && passMatch) {
-    console.log("matching email and password");
     req.session.id = user.id;
-    console.log(req.session.id)
   } else if (user) {
     res.status(403);
     res.send(`Error Code ${res.statusCode}: Wrong password`)
@@ -107,7 +98,6 @@ app.post("/urls/login", (req, res) => {
     res.status(403);
     res.send(`Error Code ${res.statusCode}: That email doesn't exist!`)
   }
-  console.log("Logged in!")
   res.redirect(`/urls/`);
 });
 
@@ -131,8 +121,7 @@ app.get("/urls", (req, res) => {
 // adds new url
 app.post("/urls", (req, res) => {
   const generatedURL = generateRandomString();
-  urlDatabase[generatedURL] = { longURL: req.body["longURL"], userID: req.session.id}
-  console.log(urlDatabase)
+  urlDatabase[generatedURL] = { longURL: req.body["longURL"], userID: req.session.id};
   res.redirect(`/urls/`);  
 });
 
@@ -140,9 +129,7 @@ app.post("/urls", (req, res) => {
 // ------ Create New URL page------
 
 app.get("/urls/new", (req, res) => {
-  console.log("newURL")
   const currentUser = req.session.id
-  console.log(currentUser)
   if (currentUser) {
     const templateVars = { user: users[currentUser]};
     res.render("urls_new", templateVars);
@@ -163,7 +150,6 @@ app.get("/urls/register", (req, res) => {
 
 app.post("/urls/register", (req, res) => {
   const newID = generateRandomString();
-
   if (req.body["email"] === '' || req.body["password"] === '') {
     res.status(400);
     res.send(`Error Code ${res.statusCode}: Fields can't be blank!`)
@@ -178,7 +164,6 @@ app.post("/urls/register", (req, res) => {
       password: bcrypt.hashSync(password, 10),
     };
     req.session.id = newID;
-    console.log(users[newID].password)
     console.log("registered");
     res.redirect(`/urls/`);
   }
@@ -186,16 +171,11 @@ app.post("/urls/register", (req, res) => {
 });
 
 
-
 // ------ Handle Specific Short URLs ------
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const currentUser = req.session.id
-  console.log(currentUser);
-  console.log(urlDatabase[req.params.shortURL].userID);
   if (urlDatabase[req.params.shortURL].userID === currentUser){
-    console.log("Deleted");
-    console.log(req.params)
     delete urlDatabase[req.params.shortURL];
     res.redirect(`/urls/`);
     return
@@ -207,8 +187,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const currentUser = req.session.id
-  console.log(users[currentUser]);
-  console.log(urlDatabase[req.params.shortURL].longURL);
   if (urlDatabase[req.params.shortURL].userID === currentUser){
     const templateVars = { user: users[currentUser], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
     res.render("urls_show", templateVars);
@@ -219,19 +197,13 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  console.log("Updated");
-  console.log(req.body)
   const shtURL = req.params.shortURL
-  console.log(shtURL)
-  console.log(urlDatabase[shtURL])
   urlDatabase[shtURL].longURL = req.body.longURL;
   res.redirect(`/urls/`)
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  console.log(req.params.shortURL)
   const longURL = urlDatabase[req.params.shortURL].longURL
-  console.log(longURL)
   res.redirect(longURL);
 });
 
