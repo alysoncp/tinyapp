@@ -1,31 +1,55 @@
+// -------------------- REQUIRES ----------------------
+
 const express = require("express");
-const app = express();
-const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 
+
+// ----------------- APP SETUP ---------------------------
+
+const app = express();
+
+const PORT = 8080; 
+
+app.set("view engine", "ejs");
+
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.use(cookieParser())
+
+
+// --------------------- DATA ------------------------------
+
 const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+  "user1": {
+    id: "user1", 
+    email: "user1@example.com", 
+    password: "1234"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
+ "xyz": {
+    id: "xyz", 
+    email: "xyz@example.com", 
+    password: "1234"
   },
   "abc": {
     id: "abc", 
     email: "abc@example.com", 
-    password: "123"
+    password: "1234"
   }
 }
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "abc"},
+  "9sm5xK": { longURL: "http://www.google.com", userID: "xyz"},
+  "4j3SJg": { longURL: "http://www.formula1.com", userID: "user1"},
+  "b6UTxQ": { longURL: "https://www.tsn.ca", userID: "xyz" },
+  "i3BoGr": { longURL: "https://www.google.ca", userID: "abc" },
+
+
 };
+
+
+// ------------ FUNCTIONS ------------------
 
 
 function generateRandomString() {
@@ -47,14 +71,21 @@ function emailCheck(newEmail){
   return undefined;
 }
 
-app.set("view engine", "ejs");
-
-app.use(bodyParser.urlencoded({extended: true}));
-
-app.use(cookieParser())
+function urlsForUser(id) {
+  usersURLs = {};
+  for (url in urlDatabase) {
+    if (urlDatabase[url].userID === id){
+      usersURLs[url] = { longURL: urlDatabase[url].longURL, userID: id}
+    }  
+  }
+  return usersURLs
+}
 
 
 // -------------- GETS and POSTS ---------------------------
+
+
+// ------ Login/Logout ------
 
 app.get("/urls/login", (req, res) => {
   const currentUser = req.cookies["id"]
@@ -89,26 +120,40 @@ app.post("/urls/logout", (req, res) => {
   res.redirect(`/urls/`);
 });
 
-app.get("/urls", (req, res) => {
-  // console.log(res.status);
-  const currentUser = req.cookies["id"]
-  console.log(currentUser);
-  console.log(users[currentUser]);
-  const templateVars = { user: users[currentUser], urls: urlDatabase };
-  res.render("urls_index", templateVars);
-});
 
-app.get("/urls/new", (req, res) => {
+// ------ Homepage ------
+
+app.get("/urls", (req, res) => {
   const currentUser = req.cookies["id"]
-  const templateVars = { user: users[currentUser]};
-  res.render("urls_new", templateVars);
+  const usersURLs = urlsForUser(currentUser)
+  const templateVars = { user: users[currentUser], urls: usersURLs };
+  res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   const generatedURL = generateRandomString();
   urlDatabase[generatedURL] = req.body["longURL"];
-  res.redirect(`/urls/${generatedURL}`);  
+  res.redirect(`/urls/`);  
 });
+
+
+// ------ Create New URL ------
+
+app.get("/urls/new", (req, res) => {
+  console.log("newURL")
+  const currentUser = req.cookies["id"]
+  console.log(currentUser)
+  if (currentUser) {
+    const templateVars = { user: users[currentUser]};
+    res.render("urls_new", templateVars);
+  } else {
+    const templateVars = { user: users[currentUser], urls: urlDatabase };
+    res.render("urls_login", templateVars);
+  }
+});
+
+
+// ------ Register New User ------
 
 app.get("/urls/register", (req, res) => {
   const currentUser = req.cookies["id"]
@@ -139,15 +184,40 @@ app.post("/urls/register", (req, res) => {
 
 });
 
+
+
+// ------ Handle Specific Short URLs ------
+
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log("Deleted");
-  console.log(req.params)
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls/`);
+  const currentUser = req.cookies["id"]
+  console.log(currentUser);
+  console.log(urlDatabase[req.params.shortURL].userID);
+  if (urlDatabase[req.params.shortURL].userID === currentUser){
+    console.log("Deleted");
+    console.log(req.params)
+    delete urlDatabase[req.params.shortURL];
+    res.redirect(`/urls/`);
+    return
+  } else {
+    res.status(401);
+    res.send(`Error Code ${res.statusCode}: You do not have authorization to delete this URL`)
+  }  
 });
 
+app.get("/urls/:shortURL", (req, res) => {
+  const currentUser = req.cookies["id"]
+  console.log(users[currentUser]);
+  console.log(urlDatabase[req.params.shortURL].longURL);
+  if (urlDatabase[req.params.shortURL].userID === currentUser){
+    const templateVars = { user: users[currentUser], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(401);
+    res.send(`Error Code ${res.statusCode}: You do not have authorization to edit this URL`)
+  }  
+});
 
-app.post("/urls/:shortURL/update", (req, res) => {
+app.post("/urls/:shortURL", (req, res) => {
   console.log("Updated");
   console.log(req.body)
   const shtURL = req.params.shortURL
@@ -156,33 +226,17 @@ app.post("/urls/:shortURL/update", (req, res) => {
   res.redirect(`/urls/`)
 });
 
-// app.get("/urls/:shortURL", (req, res) => {
-//   const longURL = urlDatabase[req.params.shortURL]
-//   res.redirect(longURL);
-// });
-
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { id: req.cookies["id"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  res.render("urls_show", templateVars);
+app.get("/u/:shortURL", (req, res) => {
+  console.log(req.params.shortURL)
+  const longURL = urlDatabase[req.params.shortURL].longURL
+  console.log(longURL)
+  res.redirect(longURL);
 });
 
 
-
-/* practice pages
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-*/
+// --------------- LISTEN ------------------
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
