@@ -190,19 +190,21 @@ app.post("/urls/register", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const currentUser = req.cookies["id"]
-  console.log(currentUser)
+  console.log(currentUser);
+  console.log(urlDatabase[req.params.shortURL].userID);
   if (urlDatabase[req.params.shortURL].userID === currentUser){
     console.log("Deleted");
     console.log(req.params)
     delete urlDatabase[req.params.shortURL];
     res.redirect(`/urls/`);
+    return
   } else {
     res.status(401);
     res.send(`Error Code ${res.statusCode}: You do not have authorization to delete this URL`)
   }  
 });
 
-app.get("/urls/:shortURL/update", (req, res) => {
+app.get("/urls/:shortURL", (req, res) => {
   const currentUser = req.cookies["id"]
   console.log(currentUser);
   console.log(urlDatabase[req.params.shortURL].userID);
@@ -215,7 +217,7 @@ app.get("/urls/:shortURL/update", (req, res) => {
   }  
 });
 
-app.post("/urls/:shortURL/update", (req, res) => {
+app.post("/urls/:shortURL", (req, res) => {
   console.log("Updated");
   console.log(req.body)
   const shtURL = req.params.shortURL
@@ -224,7 +226,7 @@ app.post("/urls/:shortURL/update", (req, res) => {
   res.redirect(`/urls/`)
 });
 
-app.get("/urls/:shortURL", (req, res) => {
+app.get("/u/:shortURL", (req, res) => {
   console.log(req.params.shortURL)
   const longURL = urlDatabase[req.params.shortURL].longURL
   console.log(longURL)
